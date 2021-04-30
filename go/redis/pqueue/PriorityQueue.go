@@ -1,4 +1,4 @@
-package PriorityQueue
+package pqueue
 
 import (
 	"context"
