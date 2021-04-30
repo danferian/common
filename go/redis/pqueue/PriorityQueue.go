@@ -24,7 +24,7 @@ type (
 		delayedKey  string
 		queuedKey   string
 		rateLimit   int
-		handlerFunc func(msg string)
+		handlerFunc func(msg string, wg *sync.WaitGroup)
 		logger      *logrus.Logger
 		wg          *sync.WaitGroup
 	}
@@ -41,7 +41,7 @@ type (
 	}
 )
 
-func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string)) (Client, error) {
+func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup)) (Client, error) {
 	logger.Info("initializing new redis priority queue")
 
 	ctx := context.Background()
@@ -153,7 +153,7 @@ func (c *client) queueConsume() {
 		}
 
 		c.wg.Add(1)
-		go c.handlerFunc(msg)
+		go c.handlerFunc(msg, c.wg)
 	}
 }
 
