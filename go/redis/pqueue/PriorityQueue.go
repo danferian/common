@@ -90,6 +90,10 @@ func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, 
 	return client, nil
 }
 
+func (c *client) Wait() {
+	c.wg.Wait()
+}
+
 func (c *client) delayedQueueConsume() {
 	ctx := context.Background()
 
