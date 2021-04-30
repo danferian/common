@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"github.com/sirupsen/logrus"
+	"sync"
 	"time"
 )
 
@@ -23,8 +24,9 @@ type (
 		delayedKey  string
 		queuedKey   string
 		rateLimit   int
-		handlerFunc func(msg string)
+		handlerFunc func(msg string, wg *sync.WaitGroup)
 		logger      *logrus.Logger
+		wg          *sync.WaitGroup
 	}
 	PQueue struct {
 		RetryCount int         `json:"retry_count"`
@@ -38,7 +40,7 @@ type (
 	}
 )
 
-func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string)) (Client, error) {
+func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup)) (Client, error) {
 	logger.Info("initializing new redis priority queue")
 
 	ctx := context.Background()
@@ -79,6 +81,7 @@ func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, 
 		rateLimit:   rateLimit,
 		handlerFunc: handlerFunc,
 		logger:      logger,
+		wg:          &sync.WaitGroup{},
 	}
 
 	go client.delayedQueueConsume()
@@ -148,7 +151,8 @@ func (c *client) queueConsume() {
 			continue
 		}
 
-		go c.handlerFunc(msg)
+		c.wg.Add(1)
+		go c.handlerFunc(msg, c.wg)
 	}
 }
 
