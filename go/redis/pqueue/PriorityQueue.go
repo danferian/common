@@ -37,6 +37,7 @@ type (
 		Push(request *PQueue) error
 		DelayedLength() (int, error)
 		QueuedLength() (int, error)
+		Wait()
 	}
 )
 
@@ -88,10 +89,6 @@ func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, 
 	go client.queueConsume()
 
 	return client, nil
-}
-
-func (c *client) Wait() {
-	c.wg.Wait()
 }
 
 func (c *client) delayedQueueConsume() {
@@ -190,4 +187,8 @@ func (c *client) DelayedLength() (int, error) {
 func (c *client) QueuedLength() (int, error) {
 	queuedMsg, err := c.rdb.LRange(context.Background(), c.queuedKey, 0, -1).Result()
 	return len(queuedMsg), err
+}
+
+func (c *client) Wait() {
+	c.wg.Wait()
 }
