@@ -42,7 +42,7 @@ type (
 	}
 )
 
-func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup), opt *redis.ClusterOptions) (Client, error) {
+func NewRedisPriorityQueue(logger *logrus.Logger, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup), opt *redis.ClusterOptions) (Client, error) {
 	logger.Info("initializing new redis priority queue")
 
 	ctx := context.Background()
