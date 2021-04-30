@@ -37,6 +37,7 @@ type (
 		Push(request *PQueue) error
 		DelayedLength() (int, error)
 		QueuedLength() (int, error)
+		Add(in int)
 		Wait()
 	}
 )
@@ -151,8 +152,7 @@ func (c *client) queueConsume() {
 		if err != nil {
 			continue
 		}
-
-		c.wg.Add(1)
+		
 		go c.handlerFunc(msg, c.wg)
 	}
 }
@@ -187,6 +187,10 @@ func (c *client) DelayedLength() (int, error) {
 func (c *client) QueuedLength() (int, error) {
 	queuedMsg, err := c.rdb.LRange(context.Background(), c.queuedKey, 0, -1).Result()
 	return len(queuedMsg), err
+}
+
+func (c *client) Add(in int) {
+	c.wg.Add(in)
 }
 
 func (c *client) Wait() {
