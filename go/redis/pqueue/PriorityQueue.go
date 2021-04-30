@@ -42,21 +42,13 @@ type (
 	}
 )
 
-func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup)) (Client, error) {
+func NewRedisPriorityQueue(logger *logrus.Logger, address []string, key string, limit int, handlerFunc func(msg string, wg *sync.WaitGroup), opt *redis.ClusterOptions) (Client, error) {
 	logger.Info("initializing new redis priority queue")
 
 	ctx := context.Background()
 	defer ctx.Done()
 
-	rdb := redis.NewClusterClient(
-		&redis.ClusterOptions{
-			Addrs:        address,
-			DialTimeout:  5 * time.Second,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 5 * time.Second,
-			MinIdleConns: 16,
-			MaxConnAge:   5 * time.Second,
-		})
+	rdb := redis.NewClusterClient(opt)
 
 	if _, err := rdb.Ping(ctx).Result(); err != nil {
 		logger.Errorf("an error occurred when try to ping rdb. err: %v", err)
@@ -152,7 +144,7 @@ func (c *client) queueConsume() {
 		if err != nil {
 			continue
 		}
-		
+
 		go c.handlerFunc(msg, c.wg)
 	}
 }
